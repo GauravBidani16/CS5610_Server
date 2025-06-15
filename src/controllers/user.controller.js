@@ -1,4 +1,5 @@
-import User from "../models/User.js";
+import User from "../models/user.model.js";
+import Post from "../models/post.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
@@ -44,7 +45,7 @@ export const getAllUsers = asyncHandler(async (req, res) => {
 // Follow another user
 export const followUser = asyncHandler(async (req, res) => {
   const { userId } = req.params;
-  const follower = await User.findById(req.user.userId);
+  const follower = await User.findById(req.user._id);
   const userToFollow = await User.findById(userId);
 
   if (!userToFollow) throw new ApiError(404, "User not found");
@@ -54,7 +55,7 @@ export const followUser = asyncHandler(async (req, res) => {
   }
 
   follower.following.push(userId);
-  userToFollow.followers.push(req.user.userId);
+  userToFollow.followers.push(req.user._id);
 
   await follower.save();
   await userToFollow.save();
@@ -65,13 +66,13 @@ export const followUser = asyncHandler(async (req, res) => {
 // Unfollow a user
 export const unfollowUser = asyncHandler(async (req, res) => {
   const { userId } = req.params;
-  const follower = await User.findById(req.user.userId);
+  const follower = await User.findById(req.user._id);
   const userToUnfollow = await User.findById(userId);
 
   if (!userToUnfollow) throw new ApiError(404, "User not found");
 
   follower.following = follower.following.filter((id) => id.toString() !== userId);
-  userToUnfollow.followers = userToUnfollow.followers.filter((id) => id.toString() !== req.user.userId);
+  userToUnfollow.followers = userToUnfollow.followers.filter((id) => id.toString() !== req.user._id);
 
   await follower.save();
   await userToUnfollow.save();
@@ -81,7 +82,7 @@ export const unfollowUser = asyncHandler(async (req, res) => {
 
 // Update user profile (only by the user themselves)
 export const updateUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.userId);
+  const user = await User.findById(req.user._id);
 
   if (!user) throw new ApiError(404, "User not found");
 
@@ -114,7 +115,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
 
   if (!user) throw new ApiError(404, "User not found");
 
-  if (req.user.userId !== userId && req.user.role !== "ADMIN") {
+  if (req.user._id !== userId && req.user.role !== "ADMIN") {
     throw new ApiError(403, "Unauthorized to delete this account");
   }
 

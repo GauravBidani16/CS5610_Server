@@ -17,7 +17,7 @@ export const createPost = asyncHandler(async (req, res) => {
 
   // Create post entry in database
   const newPost = await Post.create({
-    author: req.user.userId,
+    author: req.user._id,
     postUrl: cloudinaryResponse.url,
   });
 
@@ -27,7 +27,7 @@ export const createPost = asyncHandler(async (req, res) => {
 // Get posts of a specific user
 export const getUserPosts = asyncHandler(async (req, res) => {
   const { userId } = req.params;
-  const requestingUser = await User.findById(req.user.userId);
+  const requestingUser = await User.findById(req.user._id);
   const userProfile = await User.findById(userId);
 
   if (!userProfile) throw new ApiError(404, "User not found");
@@ -52,11 +52,11 @@ export const likePost = asyncHandler(async (req, res) => {
 
   if (!post) throw new ApiError(404, "Post not found");
 
-  if (post.likes.includes(req.user.userId)) {
+  if (post.likes.includes(req.user._id)) {
     throw new ApiError(400, "You have already liked this post");
   }
 
-  post.likes.push(req.user.userId);
+  post.likes.push(req.user._id);
   await post.save();
 
   res.status(200).json(new ApiResponse(200, {}, "Post liked successfully"));
@@ -69,7 +69,7 @@ export const unlikePost = asyncHandler(async (req, res) => {
 
   if (!post) throw new ApiError(404, "Post not found");
 
-  post.likes = post.likes.filter((id) => id.toString() !== req.user.userId);
+  post.likes = post.likes.filter((id) => id.toString() !== req.user._id);
   await post.save();
 
   res.status(200).json(new ApiResponse(200, {}, "Post unliked successfully"));
@@ -83,7 +83,7 @@ export const commentOnPost = asyncHandler(async (req, res) => {
 
   if (!post) throw new ApiError(404, "Post not found");
 
-  post.comments.push({ author: req.user.userId, text });
+  post.comments.push({ author: req.user._id, text });
   await post.save();
 
   res.status(201).json(new ApiResponse(201, {}, "Comment added successfully"));
@@ -96,7 +96,7 @@ export const deletePost = asyncHandler(async (req, res) => {
 
   if (!post) throw new ApiError(404, "Post not found");
 
-  if (req.user.userId !== post.author.toString() && req.user.role !== "ADMIN") {
+  if (req.user._id.toString() !== post.author.toString() && req.user.role !== "ADMIN") {
     throw new ApiError(403, "Unauthorized to delete this post");
   }
 

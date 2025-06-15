@@ -2,11 +2,6 @@ import mongoose from "mongoose";
 
 const commentSchema = new mongoose.Schema(
   {
-    commentId: {
-      type: String,
-      required: true,
-      unique: true,
-    },
     postId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Post",

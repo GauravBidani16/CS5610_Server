@@ -1,14 +1,15 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+import User from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 // Generate Access & Refresh Tokens
 const generateTokens = (user) => {
   const accessToken = jwt.sign(
     {
-      userId: user._id,
+      _id: user._id,
       username: user.username,
       role: user.role,
     },
@@ -19,7 +20,7 @@ const generateTokens = (user) => {
   );
 
   const refreshToken = jwt.sign(
-    { userId: user._id },
+    { _id: user._id },
     process.env.REFRESH_TOKEN_SECRET,
     { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
   );
@@ -53,7 +54,13 @@ export const registerUser = asyncHandler(async (req, res) => {
     bio,
   });
 
-  res.status(201).json(new ApiResponse(201, newUser, "User registered successfully"));
+  const createdUser = await User.findById(newUser._id).select("-password -refreshToken")
+
+  if(!createdUser) {
+    throw new ApiError(500, "Something went wrong while registering the user! Please try again.")
+  }
+
+  res.status(201).json(new ApiResponse(201, createdUser, "User registered successfully"));
 });
 
 // User Login
@@ -107,7 +114,7 @@ export const refreshToken = asyncHandler(async (req, res) => {
 
 // User Logout
 export const logoutUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.userId);
+  const user = await User.findById(req.user._id);
   if (!user) throw new ApiError(404, "User not found");
 
   user.refreshToken = null; // Clear stored refresh token

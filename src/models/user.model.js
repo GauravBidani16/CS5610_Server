@@ -1,15 +1,9 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import isEmail from "validator/lib/isEmail";
+// import isEmail from "validator/lib/isEmail";
 
 const userSchema = new mongoose.Schema(
   {
-    userId: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-    },
     username: {
       type: String,
       unique: true,
@@ -30,7 +24,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      validate: [isEmail, "Invalid email"],
+      // validate: [isEmail, "Invalid email"],
     },
     password: {
       type: String,
