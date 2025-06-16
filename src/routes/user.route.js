@@ -20,13 +20,13 @@ router.get("/:username", getUserProfile);
 router.get("/", authenticateUser, authorizeRole(["ADMIN"]), getAllUsers);
 
 // Follow/unfollow a user
-router.post("/:userId/follow", authenticateUser, followUser);
-router.delete("/:userId/unfollow", authenticateUser, unfollowUser);
+router.post("/follow/:username", authenticateUser, followUser);
+router.delete("/unfollow/:username", authenticateUser, unfollowUser);
 
 // Update profile with optional profile picture upload
 router.put("/update", authenticateUser, upload.single("file"), updateUserProfile);
 
 // User deletion: Self or ADMIN action
-router.delete("/:userId", authenticateUser, deleteUser);
+router.delete("/:username", authenticateUser, deleteUser);
 
 export default router;

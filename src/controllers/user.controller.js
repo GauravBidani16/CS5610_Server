@@ -8,6 +8,7 @@ import { asyncHandler } from "../utils/AsyncHandler.js";
 export const getUserProfile = asyncHandler(async (req, res) => {
   const { username } = req.params;
 
+  console.log(username);
   // Fetch user details excluding password & refreshToken
   const user = await User.findOne({ username }).select("-password -refreshToken");
 
@@ -44,40 +45,51 @@ export const getAllUsers = asyncHandler(async (req, res) => {
 
 // Follow another user
 export const followUser = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-  const follower = await User.findById(req.user._id);
-  const userToFollow = await User.findById(userId);
+  const { username } = req.params;
+  console.log("req", req);
+  console.log("req.params:", req.params);
+  
+  
+  console.log("username", username);
+  
+  const loggedInUser = await User.findById(req.user._id);
+  const userToFollow = await User.findOne({username});
 
+  console.log("userToFollow", userToFollow);
   if (!userToFollow) throw new ApiError(404, "User not found");
 
-  if (follower.following.includes(userId)) {
+  if (loggedInUser.following.includes(userToFollow._id.toString())) {
     throw new ApiError(400, "You are already following this user");
   }
 
-  follower.following.push(userId);
+  loggedInUser.following.push(userToFollow._id);
   userToFollow.followers.push(req.user._id);
 
-  await follower.save();
+  await loggedInUser.save();
   await userToFollow.save();
 
-  res.status(200).json(new ApiResponse(200, {}, "Successfully followed user"));
+  res.status(200).json(new ApiResponse(200, {}, `Successfully followed user: + ${username}`));
 });
 
 // Unfollow a user
 export const unfollowUser = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-  const follower = await User.findById(req.user._id);
-  const userToUnfollow = await User.findById(userId);
+  const { username } = req.params;
+  const loggedInUser = await User.findById(req.user._id);
+  const userToUnfollow = await User.findOne({ username });
 
   if (!userToUnfollow) throw new ApiError(404, "User not found");
 
-  follower.following = follower.following.filter((id) => id.toString() !== userId);
+  if (!loggedInUser.following.includes(userToUnfollow._id.toString())) {
+    throw new ApiError(400, "You are not following this user");
+  }
+
+  loggedInUser.following = loggedInUser.following.filter((id) => id.toString() !== userId);
   userToUnfollow.followers = userToUnfollow.followers.filter((id) => id.toString() !== req.user._id);
 
-  await follower.save();
+  await loggedInUser.save();
   await userToUnfollow.save();
 
-  res.status(200).json(new ApiResponse(200, {}, "Successfully unfollowed user"));
+  res.status(200).json(new ApiResponse(200, {}, `Successfully unfollowed user + ${username}`));
 });
 
 // Update user profile (only by the user themselves)
