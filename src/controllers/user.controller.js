@@ -122,16 +122,48 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
 
 // Delete user (self or ADMIN action)
 export const deleteUser = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-  const user = await User.findById(userId);
+  const { username } = req.params;
+  const user = await User.findById({ username });
 
   if (!user) throw new ApiError(404, "User not found");
 
-  if (req.user._id !== userId && req.user.role !== "ADMIN") {
+  if (req.user._id !== username && req.user.role !== "ADMIN") {
     throw new ApiError(403, "Unauthorized to delete this account");
   }
 
-  await User.findByIdAndDelete(userId);
+  await User.findByIdAndDelete(username);
 
   res.status(200).json(new ApiResponse(200, {}, "User deleted successfully"));
 });
+
+export const getFollowers = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+  const user = await User.findOne({ username }).populate('followers', 'username profilepic');
+
+  if (!user) throw new ApiError(404, "User not found");
+
+  res.status(200).json(new ApiResponse(200, user.followers, "Followers fetched successfully"));
+});
+
+export const getFollowing = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+  const user = await User.findOne({ username }).populate('following', 'username profilepic');
+
+  if (!user) throw new ApiError(404, "User not found");
+
+  res.status(200).json(new ApiResponse(200, user.following, "Following fetched successfully"));
+});
+
+export const getCurrentUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ _id: req.user._id })
+    .select("-password -refreshToken")
+    .populate("followers", "username profilepic")
+    .populate("following", "username profilepic");
+
+  if (!user) throw new ApiError(404, "User not found");
+
+  const posts = await Post.find({ author: user._id });
+
+  res.status(200).json(new ApiResponse(200, { ...user._doc, posts }, "User profile fetched successfully"));
+});
+

@@ -8,6 +8,8 @@ import {
   unlikePost,
   commentOnPost,
   deletePost,
+  updatePostCaption,
+  getPublicPosts,
 } from "../controllers/post.controller.js";
 
 const router = express.Router();
@@ -15,8 +17,12 @@ const router = express.Router();
 // Create a new post (Authenticated users only)
 router.post("/", authenticateUser, upload.single("file"), createPost);
 
+router.get("/public", getPublicPosts)
+
 // Get posts of a specific user
-router.get("/:userId", authenticateUser, getUserPosts);
+router.get("/:username", authenticateUser, getUserPosts);
+
+router.put("/:postId/caption", authenticateUser, updatePostCaption);
 
 // Like & Unlike a post
 router.post("/:postId/like", authenticateUser, likePost);

@@ -11,6 +11,10 @@ const PostSchema = new mongoose.Schema(
       type: String, // Cloudinary url
       required: true,
     },
+    postCaption: {
+      type: String,
+      trim: true,
+    },
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,
