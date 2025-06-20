@@ -12,6 +12,11 @@ const generateTokens = (user) => {
       _id: user._id,
       username: user.username,
       role: user.role,
+      profilepic: user.profilepic,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      email: user.email,
+      bio: user.bio,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {

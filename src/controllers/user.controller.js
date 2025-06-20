@@ -98,7 +98,7 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
 
   if (!user) throw new ApiError(404, "User not found");
 
-  const { firstname, lastname, bio } = req.body;
+  const { firstname, lastname, email, bio, role } = req.body;
 
   // If a new profile picture is uploaded, store it on Cloudinary
   let profilepic = user.profilepic;
@@ -112,6 +112,8 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
   if (firstname) user.firstname = firstname;
   if (lastname) user.lastname = lastname;
   if (bio) user.bio = bio;
+  if (email) user.email = email;
+  if (role) user.role = role;
   user.profilepic = profilepic;
 
   await user.save();
