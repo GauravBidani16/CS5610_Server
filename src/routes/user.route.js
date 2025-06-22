@@ -16,7 +16,7 @@ import {
 
 const router = express.Router();
 
-router.get("/", authenticateUser, authorizeRole(["ADMIN"]), getAllUsers);
+router.get("/", authenticateUser, getAllUsers);
 // Public access: Get user profile
 router.get("/current", authenticateUser, getCurrentUserProfile);
 router.get("/:username", getUserProfile);
