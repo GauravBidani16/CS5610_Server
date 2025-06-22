@@ -31,7 +31,7 @@ router.delete("/unfollow/:username", authenticateUser, unfollowUser);
 router.put("/update", authenticateUser, upload.single("file"), updateUserProfile);
 
 // User deletion: Self or ADMIN action
-router.delete("/:username", authenticateUser, deleteUser);
+router.delete("/:username", authenticateUser, authorizeRole(["ADMIN"]), deleteUser);
 
 router.get('/followers/:username', getFollowers);
 router.get('/following/:username', getFollowing);

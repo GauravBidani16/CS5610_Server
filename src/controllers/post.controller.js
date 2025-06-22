@@ -11,9 +11,14 @@ export const createPost = asyncHandler(async (req, res) => {
   const { postCaption } = req.body;
 
   if (!file) throw new ApiError(400, "No file uploaded");
+  console.log("FILEE", file);
+  
 
   // Upload file to Cloudinary
   const cloudinaryResponse = await uploadOnCloudinary(file.path);
+
+  console.log("clouddd", cloudinaryResponse);
+  
   if (!cloudinaryResponse) throw new ApiError(500, "File upload failed");
 
   // Create post entry in database
@@ -46,6 +51,29 @@ export const getUserPosts = asyncHandler(async (req, res) => {
 
   res.status(200).json(new ApiResponse(200, posts, "Posts retrieved successfully"));
 });
+
+// Get posts from all the users, the current user is following
+export const getFeedPosts = asyncHandler(async (req, res) => {
+  const currentUser = await User.findById(req.user._id);
+
+  if (!currentUser) throw new ApiError(404, "User not found");
+
+  if (!currentUser.following || currentUser.following.length === 0) {
+    return res.status(200).json(new ApiResponse(200, [], "No followings. Feed is empty."));
+  }
+
+  const posts = await Post.find({ author: { $in: currentUser.following } })
+    .populate("author", "username profilepic")
+    .populate({
+      path: "comments",
+      model: "Comment",
+      populate: { path: "author", model: "User", select: "username profilepic" }
+    })
+    .sort({ updatedAt: -1 });
+
+  res.status(200).json(new ApiResponse(200, posts, "Feed posts fetched successfully"));
+});
+
 
 // Update post caption (Only by post owner)
 export const updatePostCaption = asyncHandler(async (req, res) => {
@@ -133,14 +161,16 @@ export const getPublicPosts = asyncHandler(async (req, res) => {
   // Fetch only public user IDs once to avoid multiple DB queries
   const publicUserIds = await User.find({ role: "PUBLIC_USER" }).distinct("_id");
 
-  if (publicUserIds.length === 0) throw new ApiError(404, "No public users found");
-
+  console.log("Public Ids", publicUserIds);
+  if (publicUserIds.length === 0) {
+    res.status(200).json(new ApiResponse(200, [], "No Public posts available"));
+  }
   // Fetch posts efficiently, ensuring comments are fully populated
   const posts = await Post.find({ author: { $in: publicUserIds } })
     .populate("author", "username profilepic")
     .populate({
       path: "comments",
-      model: "Comment", // Explicitly reference Comment model
+      model: "Comment",
       populate: { path: "author", model: "User", select: "username profilepic" }
     })
     .sort({ updatedAt: -1 });

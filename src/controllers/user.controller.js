@@ -20,9 +20,10 @@ export const getUserProfile = asyncHandler(async (req, res) => {
   const followingCount = user.following.length;
 
   let userPosts = [];
-  if (user.role === "PUBLIC_USER") {
-    userPosts = await Post.find({ author: user._id });
-  }
+  userPosts = await Post.find({ author: user._id });
+  // if (user.role === "PUBLIC_USER") {
+  //   userPosts = await Post.find({ author: user._id });
+  // }
 
   res.status(200).json(
     new ApiResponse(200, {
@@ -30,7 +31,7 @@ export const getUserProfile = asyncHandler(async (req, res) => {
       postCount,
       followerCount,
       followingCount,
-      posts: user.role === "PUBLIC_USER" ? userPosts : [],
+      posts: userPosts,
     }, "User profile fetched successfully")
   );
 });
@@ -46,18 +47,18 @@ export const getAllUsers = asyncHandler(async (req, res) => {
 // Follow another user
 export const followUser = asyncHandler(async (req, res) => {
   const { username } = req.params;
-  console.log("req", req);
-  console.log("req.params:", req.params);
-  
-  
   console.log("username", username);
   
   const loggedInUser = await User.findById(req.user._id);
   const userToFollow = await User.findOne({username});
 
   console.log("userToFollow", userToFollow);
+  console.log("loggedInUser", loggedInUser);
   if (!userToFollow) throw new ApiError(404, "User not found");
 
+  if(userToFollow.followers.includes(loggedInUser._id.toString())) {
+    throw new ApiError(400, "You follow this user")
+  }
   if (loggedInUser.following.includes(userToFollow._id.toString())) {
     throw new ApiError(400, "You are already following this user");
   }
@@ -83,7 +84,7 @@ export const unfollowUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "You are not following this user");
   }
 
-  loggedInUser.following = loggedInUser.following.filter((id) => id.toString() !== userId);
+  loggedInUser.following = loggedInUser.following.filter((id) => id.toString() !== userToUnfollow._id.toString());
   userToUnfollow.followers = userToUnfollow.followers.filter((id) => id.toString() !== req.user._id);
 
   await loggedInUser.save();
@@ -123,19 +124,16 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
 
 
 // Delete user (self or ADMIN action)
-export const deleteUser = asyncHandler(async (req, res) => {
+export const deleteUser = asyncHandler(async (req, res) => {  
   const { username } = req.params;
-  const user = await User.findById({ username });
+  
+  const user = await User.findOne({ username });
 
   if (!user) throw new ApiError(404, "User not found");
 
-  if (req.user._id !== username && req.user.role !== "ADMIN") {
-    throw new ApiError(403, "Unauthorized to delete this account");
-  }
+  await User.findOneAndDelete(username);
 
-  await User.findByIdAndDelete(username);
-
-  res.status(200).json(new ApiResponse(200, {}, "User deleted successfully"));
+  res.status(200).json(new ApiResponse(200, user, "User deleted successfully"));
 });
 
 export const getFollowers = asyncHandler(async (req, res) => {

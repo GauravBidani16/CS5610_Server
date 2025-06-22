@@ -10,6 +10,7 @@ import {
   deletePost,
   updatePostCaption,
   getPublicPosts,
+  getFeedPosts
 } from "../controllers/post.controller.js";
 
 const router = express.Router();
@@ -17,7 +18,8 @@ const router = express.Router();
 // Create a new post (Authenticated users only)
 router.post("/", authenticateUser, upload.single("file"), createPost);
 
-router.get("/public", getPublicPosts)
+router.get("/public", getPublicPosts);
+router.get("/feed", authenticateUser, getFeedPosts);
 
 // Get posts of a specific user
 router.get("/:username", authenticateUser, getUserPosts);
