@@ -62,7 +62,18 @@ export const getFeedPosts = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, [], "No followings. Feed is empty."));
   }
 
-  const posts = await Post.find({ author: { $in: currentUser.following } })
+  const privateFollowingUsers = await User.find({
+    _id: { $in: currentUser.following },
+    role: "PRIVATE_USER"                
+  }).select('_id');
+
+  const privateFollowingUserIds = privateFollowingUsers.map(user => user._id);
+
+  if (privateFollowingUserIds.length === 0) {
+    return res.status(200).json(new ApiResponse(200, [], "No private users followed, or no posts from them."));
+  }
+
+  const posts = await Post.find({ author: { $in: currentUser.privateFollowingUserIds } })
     .populate("author", "username profilepic")
     .populate({
       path: "comments",
