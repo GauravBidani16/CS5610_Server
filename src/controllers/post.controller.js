@@ -186,7 +186,7 @@ export const getPublicPosts = asyncHandler(async (req, res) => {
     })
     .sort({ updatedAt: -1 });
 
-  if (posts.length === 0) throw new ApiError(404, "No public posts available");
+  if (posts.length === 0) res.status(200).json(new ApiResponse(200, [], "No Public posts available"));
 
   res.status(200).json(new ApiResponse(200, posts, "Public posts fetched successfully"));
 });
