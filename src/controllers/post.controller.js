@@ -73,7 +73,7 @@ export const getFeedPosts = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, [], "No private users followed, or no posts from them."));
   }
 
-  const posts = await Post.find({ author: { $in: currentUser.privateFollowingUserIds } })
+  const posts = await Post.find({ author: { $in: privateFollowingUserIds } })
     .populate("author", "username profilepic")
     .populate({
       path: "comments",
